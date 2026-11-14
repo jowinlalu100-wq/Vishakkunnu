@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmed - Tech Cafe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #0f0f13; color: #ffffff; }
+        
+        .success-wrapper {
+            max-width: 600px; margin: 60px auto; padding: 0 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* --- Animated Checkmark --- */
+        .success-animation { margin-bottom: 20px; }
+        .checkmark { width: 80px; height: 80px; border-radius: 50%; display: block; stroke-width: 4; stroke: #2a9d8f; stroke-miterlimit: 10; box-shadow: inset 0px 0px 0px #2a9d8f; animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
+        .checkmark__circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 4; stroke-miterlimit: 10; stroke: #2a9d8f; fill: none; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+        .checkmark__check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 50px rgba(42, 157, 143, 0.1); } }
+
+        .title { font-size: 28px; font-weight: 700; margin: 0 0 10px 0; text-align: center; }
+        .subtitle { color: #a0a0a0; font-size: 15px; margin: 0 0 30px 0; text-align: center; }
+
+        /* --- Receipt Card --- */
+        .receipt-card {
+            background: #1c1c24; width: 100%; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05); overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .receipt-header {
+            background: rgba(255,255,255,0.02); padding: 25px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+
+        .receipt-header h3 { margin: 0; font-size: 14px; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .order-id { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: white; margin-top: 5px; }
+        
+        /* NEW: Date & Time Styling */
+        .order-datetime { color: #a0a0a0; font-size: 13px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+
+        /* Reservation Badge */
+        .reservation-badge {
+            background: rgba(226, 55, 68, 0.1); border: 1px solid rgba(226, 55, 68, 0.2);
+            padding: 15px 25px; display: flex; align-items: center; gap: 15px;
+        }
+        .res-icon { font-size: 24px; }
+        .res-details { flex-grow: 1; }
+        .res-title { color: #E23744; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .res-time { color: white; font-size: 15px; font-weight: 500; }
+
+        /* Items List */
+        .receipt-body { padding: 25px; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 15px; }
+        .item-name { color: white; font-weight: 500; }
+        .item-qty { color: #888; font-size: 13px; margin-left: 8px; }
+        .item-price { font-family: 'JetBrains Mono', monospace; color: #a0a0a0; }
+
+        .receipt-footer {
+            padding: 20px 25px; background: rgba(255,255,255,0.02);
+            border-top: 1px dashed rgba(255,255,255,0.1);
+        }
+        
+        .bill-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #888; }
+        .bill-total { 
+            display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1); font-size: 20px; font-weight: 700; color: white; 
+        }
+
+        /* --- Actions --- */
+        .action-buttons { display: flex; gap: 15px; width: 100%; margin-top: 30px; }
+        .btn {
+            flex: 1; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 15px;
+            text-align: center; text-decoration: none; transition: 0.3s; cursor: pointer; border: none;
+        }
+        .btn-primary { background: #E23744; color: white; }
+        .btn-primary:hover { background: #ff4757; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(226, 55, 68, 0.3); }
+        .btn-secondary { background: #2a2a35; color: white; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-secondary:hover { background: #333340; transform: translateY(-2px); }
+
+    </style>
+    <script src="assets/demo.js"></script>
+</head>
+<body>
+
+<style>
+    /* --- LIQUID GLASS NAVBAR STYLES (DESKTOP) --- */
+    nav {
+        position: sticky; 
+        top: 0; 
+        background: rgba(15, 15, 20, 0.3); 
+        backdrop-filter: blur(24px) saturate(180%); 
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        padding: 15px 50px; 
+        display: flex; 
+        justify-content: space-between;
+        align-items: center; 
+        z-index: 1000; 
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.4s ease;
+    }
+
+    .logo { display: block; text-decoration: none; }
+    
+    .logo img {
+        height: 45px; 
+        width: auto;
+        display: block;
+        transform: scale(1.8); 
+        transform-origin: left center; 
+        margin-left: 10px; 
+    }
+    
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-links a {
+        color: #b3b3b3; text-decoration: none; padding: 8px 12px;
+        border-radius: 8px; font-weight: 600; font-size: 15px; transition: all 0.3s ease;
+    }
+    
+    .nav-links a:hover { 
+        color: white; 
+        background: rgba(255, 255, 255, 0.08); 
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .nav-links a.active { 
+        color: white; 
+        background: rgba(255, 255, 255, 0.12); 
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .login-trigger {
+        background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255,255,255,0.2);
+        padding: 8px 24px; border-radius: 30px; font-weight: 600; font-size: 15px;
+        cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(10px);
+    }
+    .login-trigger:hover { background: white; color: black; transform: translateY(-2px); }
+
+    .user-profile {
+        display: flex; align-items: center; gap: 15px;
+        background: rgba(0, 0, 0, 0.4); padding: 6px 6px 6px 18px;
+        border-radius: 30px; border: 1px solid rgba(255,255,255,0.08);
+    }
+    .greeting { font-weight: 600; color: #E23744; font-size: 14px; }
+    .logout-btn { 
+        background: white; color: black !important; padding: 6px 18px !important; 
+        border-radius: 20px !important; font-size: 13px; transition: 0.3s; 
+    }
+    .logout-btn:hover { background: #e6e6e6; transform: scale(1.05); }
+
+    /* --- Hamburger Icon (Hidden on Desktop) --- */
+    .menu-icon {
+        display: none;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    /* =========================================================
+       MOBILE RESPONSIVE OVERRIDES (WITH DROPDOWN MENU)
+       ========================================================= */
+    @media (max-width: 768px) {
+        nav { padding: 12px 20px !important; }
+        
+        .logo img { 
+            transform: scale(1.3) !important; /* Safe mobile size */
+            margin-left: 0 !important; 
+            height: 35px !important; 
+        }
+
+        /* Show the Hamburger Menu Icon */
+        .menu-icon { display: block !important; margin-left: auto; }
+
+        /* Turn nav-links into a hidden dropdown menu */
+        .nav-links { 
+            display: none !important; /* Hidden by default on mobile */
+            position: absolute;
+            top: 100%; /* Sits exactly below the navbar */
+            left: 0;
+            width: 100%;
+            background: rgba(15, 15, 20, 0.95); /* Solid dark glass */
+            backdrop-filter: blur(24px);
+            flex-direction: column;
+            padding: 20px 0;
+            gap: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.7);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* This class is added by Javascript when the button is clicked */
+        .nav-links.show-mobile-menu {
+            display: flex !important;
+        }
+        
+        /* Center the links inside the dropdown */
+        .nav-links a { 
+            display: block !important; 
+            text-align: center;
+            width: 100%;
+            padding: 12px 0 !important;
+            font-size: 16px !important;
+        }
+        
+        /* Center the login/profile buttons in the dropdown */
+        .login-trigger, .user-profile { 
+            margin: 10px auto !important; 
+            justify-content: center;
+        }
+    }
+</style>
+
+<nav>
+    <a href="index.html" class="logo">
+        <img src="images/logo.png" alt="Vishakkunnu Logo" />
+    </a>
+    
+    <div class="menu-icon" onclick="toggleMobileMenu()">☰</div>
+    
+    <div class="nav-links" id="navLinksContainer">
+        <a href="index.html">Home</a>
+        <a href="order.html">Book Now</a>
+
+        <a href="your_booking.html" data-auth="in" style="display:none !important">Your Bookings</a>
+
+        <a href="index.html#about">About Us</a>
+        <a href="index.html#contact">Contact</a>
+
+        <div class="user-profile" data-auth="in" style="display:none !important">
+                <span class="greeting">Hi, <span class="vk-user-name"></span>!</span>
+                <a href="index.html" class="logout-btn" data-vk="logout">Logout</a>
+            </div>
+            <button class="login-trigger" data-auth="out" onclick="openAuth()">Log in</button>
+    </div>
+</nav>
+
+<script>
+    // 1. Mobile Menu Toggle Logic
+    function toggleMobileMenu() {
+        const navMenu = document.getElementById("navLinksContainer");
+        navMenu.classList.toggle("show-mobile-menu");
+    }
+
+    // 2. Smarter Active Link Logic
+    document.addEventListener("DOMContentLoaded", function() {
+        let currentPath = window.location.pathname.split('/').pop() || 'index.html';
+        let currentHash = window.location.hash; 
+        let navLinks = document.querySelectorAll("#navLinksContainer a");
+        
+        navLinks.forEach(link => {
+            let linkHref = link.getAttribute("href");
+            link.classList.remove("active");
+
+            // Don't apply 'active' to the logout button
+            if(link.classList.contains('logout-btn')) return;
+
+            if (currentHash) {
+                if (linkHref.includes(currentHash)) {
+                    link.classList.add("active");
+                }
+            } else if (linkHref === currentPath) {
+                link.classList.add("active");
+            }
+        });
+    });
+</script>
+
+<div class="success-wrapper">
+    
+    <div class="success-animation">
+        <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+            <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+            <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+    </div>
+
+    <h1 class="title">Order Confirmed!</h1>
+    <p class="subtitle">Thank you for your order, <span id="rcptUser"></span>. Your payment was successful.</p>
+
+    <div class="receipt-card">
+        <div class="receipt-header">
+            <div>
+                <h3>Order ID</h3>
+                <div class="order-id" id="rcptOrderId"></div>
+                <div class="order-datetime">🕒 <span id="rcptDate"></span></div>
+            </div>
+            <div style="text-align: right;">
+                <h3>Payment Ref</h3>
+                <div style="color: #888; font-size: 13px; margin-top: 10px; font-family: 'JetBrains Mono', monospace;" id="rcptToken"></div>
+            </div>
+        </div>
+
+        <div class="reservation-badge" id="rcptReservation" style="display:none">
+                <div class="res-icon">🍽️</div>
+                <div class="res-details">
+                    <div class="res-title">Table <span id="rcptTable"></span> Reserved</div>
+                    <div class="res-time" id="rcptWhen"></div>
+                </div>
+                <div style="font-size: 24px; color: #E23744;">✓</div>
+            </div>
+
+        <div class="receipt-body" id="receiptItemsContainer">
+            </div>
+
+        <div class="receipt-footer">
+            <div class="bill-row"><span>Food Subtotal</span><span id="receiptSubtotal">$0.00</span></div>
+            <div class="bill-row" id="rcptFeeRow" style="display:none"><span>Booking Fee</span><span>$5.00</span></div>
+            <div class="bill-row"><span>Taxes (5%)</span><span id="receiptTax">$0.00</span></div>
+            
+            <div class="bill-total">
+                <span>Amount Paid</span>
+                <span>$<span id="rcptTotal"></span></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <a href="your_booking.html" class="btn btn-secondary">View My Orders</a>
+        <a href="index.html" class="btn btn-primary">Back to Home</a>
+    </div>
+
+</div>
+
+<script>
+    // Replaces the request parameters the JSP used to receive
+    var receipt = VK.Checkout.getReceipt();
+    if (!receipt) {
+        window.location.replace(VK.Auth.isLoggedIn() ? 'order.html' : 'index.html');
+        receipt = {};
+    } else {
+        document.getElementById('rcptUser').textContent = VK.Auth.user() || 'friend';
+        document.getElementById('rcptOrderId').textContent = receipt.orderId;
+        document.getElementById('rcptDate').textContent = receipt.dateTime;
+        document.getElementById('rcptToken').textContent = receipt.paymentToken;
+        document.getElementById('rcptTotal').textContent = receipt.totalBill;
+        if (receipt.tableId) {
+            document.getElementById('rcptReservation').style.display = '';
+            document.getElementById('rcptFeeRow').style.display = '';
+            document.getElementById('rcptTable').textContent = receipt.tableId;
+            document.getElementById('rcptWhen').textContent = receipt.bookingDate + ' at ' + receipt.bookingTime;
+        }
+    }
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (!receipt.cartData && !receipt.tableId) return;
+        const rawCartData = receipt.cartData || '[]';
+        const hasTable = !!receipt.tableId;
+        
+        try {
+            const cartItems = JSON.parse(rawCartData);
+            const container = document.getElementById('receiptItemsContainer');
+            let subtotal = 0;
+
+            if (cartItems.length === 0 && hasTable) {
+                container.innerHTML = '<div style="text-align:center; color:#888; font-size:14px;">Table Reservation Only. No food pre-ordered.</div>';
+            } else {
+                let html = '';
+                cartItems.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    subtotal += itemTotal;
+                    
+                    html += '<div class="item-row">' +
+                                '<div>' +
+                                    '<span class="item-name">' + item.name + '</span>' +
+                                    '<span class="item-qty">x' + item.quantity + '</span>' +
+                                '</div>' +
+                                '<div class="item-price">$' + itemTotal.toFixed(2) + '</div>' +
+                            '</div>';
+                });
+                container.innerHTML = html;
+            }
+
+            const tax = (subtotal + (hasTable ? 5.00 : 0)) * 0.05;
+            document.getElementById('receiptSubtotal').innerText = '$' + subtotal.toFixed(2);
+            document.getElementById('receiptTax').innerText = '$' + tax.toFixed(2);
+
+        } catch(e) {
+            console.error("Failed to parse cart data for receipt.", e);
+        }
+    });
+</script>
+<style>
+    /* --- Liquid Glass Footer Styles --- */
+    .glass-footer {
+        /* Liquid Glass Base */
+        background: rgba(15, 15, 20, 0.3); 
+        backdrop-filter: blur(24px) saturate(180%); 
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        
+        padding: 60px 50px 20px 50px;
+        font-family: 'Inter', sans-serif;
+        color: #a0a0a0;
+        margin-top: auto; 
+    }
+
+    .footer-container {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Brand Section (DESKTOP STYLES) */
+    .footer-logo {
+        height: 70px; 
+        width: auto;
+        margin-bottom: 40px; /* Replaced the <br><br> with clean CSS margin */
+        display: block;
+        margin-left: -170px;
+        transform: scale(3.0); 
+        transform-origin: left center; 
+    }
+    
+    .footer-brand p {
+        font-size: 14px;
+        line-height: 1.6;
+        max-width: 320px;
+        margin: 0;
+        margin-left: -120px;
+    }
+
+    /* Link Columns */
+    .footer-section h3 {
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        letter-spacing: 0.5px;
+    }
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .footer-links li {
+        margin-bottom: 12px;
+    }
+    .footer-links a {
+        color: #a0a0a0;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+    
+    /* The Red Slide Hover Effect */
+    .footer-links a:hover {
+        color: #E23744;
+        transform: translateX(5px); 
+    }
+
+    /* Bottom Copyright Bar */
+    .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 40px auto 0 auto;
+        padding-top: 20px;
+        font-size: 13px;
+    }
+    .creators {
+        color: white;
+    }
+    .creators span {
+        color: #E23744;
+        font-weight: 700;
+    }
+
+    /* =========================================================
+       MOBILE RESPONSIVE OVERRIDES 
+       This section activates only on screens smaller than 768px
+       ========================================================= */
+    @media (max-width: 768px) {
+        .glass-footer { 
+            padding: 40px 20px 20px 20px; 
+        }
+        
+        .footer-container { 
+            flex-direction: column; 
+            gap: 40px; 
+            text-align: center; /* Center everything! */
+        }
+        
+        .footer-logo { 
+            transform: scale(1.8); /* Scale it down for mobile */
+            transform-origin: center; /* Scale from the middle, not the left */
+            margin: 20px auto 30px auto; /* RESET the -170px margin and center it */
+        }
+        
+        .footer-brand p { 
+            text-align: center; 
+            margin: 0 auto; /* RESET the -120px margin and center it */
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centers the quick links perfectly */
+        }
+
+        .footer-bottom { 
+            flex-direction: column; 
+            gap: 15px; 
+            text-align: center; 
+        }
+    }
+</style>
+
+<footer class="glass-footer">
+    <div class="footer-container">
+        <div class="footer-brand">
+            <img src="images/logo.png" alt="Vishakkunnu Logo" class="footer-logo">
+            <br>
+            <p>Revolutionizing the way you order food. Skip the line, book your table, and satisfy your cravings with seamless technology.</p>
+        </div>
+
+        <div class="footer-section">
+            <h3>Quick Links</h3>
+            <ul class="footer-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="order.html">Menu & Order</a></li>
+                <li><a href="index.html#about">About the Devs</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h3>Support</h3>
+            <ul class="footer-links">
+                <li><a href="index.html#contact">Contact Us</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div>&copy; 2026 Vishakkunnu. All rights reserved.</div>
+        <div style="color:#6b6b6b;">Front-end demo &middot; your data is stored only in this browser</div>
+        
+    </div>
+</footer>
+</body>
+</html>
