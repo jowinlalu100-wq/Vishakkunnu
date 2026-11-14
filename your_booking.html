@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Your Orders - Tech Cafe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; font-family: 'Inter', sans-serif; background: #0f0f13; color: white; }
+        
+        .bookings-container { max-width: 700px; margin: 60px auto; padding: 0 20px; }
+        h1 { margin-top: 0; font-size: 28px; font-weight: 700; margin-bottom: 30px; letter-spacing: -0.5px; }
+        
+        .message-box { text-align: center; padding: 40px; background: #1c1c24; border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1); color: #888; }
+        
+        /* --- Zomato/Swiggy Style Order Cards --- */
+        .orders-list { display: flex; flex-direction: column; gap: 20px; }
+        
+        .order-card {
+            background: #1c1c24; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);
+            padding: 20px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .order-card:hover { border-color: rgba(255,255,255,0.1); box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+
+        /* Card Header */
+        .order-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 15px; }
+        .order-id { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: white; display: block; margin-bottom: 4px; }
+        .order-context { font-size: 13px; color: #888; display: flex; align-items: center; gap: 6px; }
+        .table-badge { background: rgba(226, 55, 68, 0.1); color: #E23744; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase; }
+
+        /* Status Badge */
+        .status { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status.confirmed { background: rgba(42, 157, 143, 0.1); color: #2a9d8f; }
+        .status.pending { background: rgba(233, 196, 106, 0.1); color: #e9c46a; }
+        .status.cancelled { background: rgba(230, 57, 70, 0.1); color: #e63946; }
+
+        /* Items Section */
+        .order-items { font-size: 14px; color: #d0d0d0; line-height: 1.6; margin-bottom: 15px; }
+        .item-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+        .item-dot { color: #E23744; font-size: 10px; margin-top: 5px; }
+        .item-qty { font-weight: 600; color: #fff; }
+
+        /* Card Footer */
+        .order-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
+        .total-label { font-size: 13px; color: #888; }
+        .total-amount { font-size: 18px; font-weight: 700; color: white; font-family: 'JetBrains Mono', monospace; }
+        
+        .reorder-btn { background: rgba(255,255,255,0.05); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .reorder-btn:hover { background: rgba(255,255,255,0.1); color: #E23744; }
+    </style>
+    <script src="assets/demo.js"></script>
+</head>
+<body>
+<style>
+    /* --- LIQUID GLASS NAVBAR STYLES (DESKTOP) --- */
+    nav {
+        position: sticky; 
+        top: 0; 
+        background: rgba(15, 15, 20, 0.3); 
+        backdrop-filter: blur(24px) saturate(180%); 
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        padding: 15px 50px; 
+        display: flex; 
+        justify-content: space-between;
+        align-items: center; 
+        z-index: 1000; 
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.4s ease;
+    }
+
+    .logo { display: block; text-decoration: none; }
+    
+    .logo img {
+        height: 45px; 
+        width: auto;
+        display: block;
+        transform: scale(1.8); 
+        transform-origin: left center; 
+        margin-left: 10px; 
+    }
+    
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-links a {
+        color: #b3b3b3; text-decoration: none; padding: 8px 12px;
+        border-radius: 8px; font-weight: 600; font-size: 15px; transition: all 0.3s ease;
+    }
+    
+    .nav-links a:hover { 
+        color: white; 
+        background: rgba(255, 255, 255, 0.08); 
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .nav-links a.active { 
+        color: white; 
+        background: rgba(255, 255, 255, 0.12); 
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .login-trigger {
+        background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255,255,255,0.2);
+        padding: 8px 24px; border-radius: 30px; font-weight: 600; font-size: 15px;
+        cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(10px);
+    }
+    .login-trigger:hover { background: white; color: black; transform: translateY(-2px); }
+
+    .user-profile {
+        display: flex; align-items: center; gap: 15px;
+        background: rgba(0, 0, 0, 0.4); padding: 6px 6px 6px 18px;
+        border-radius: 30px; border: 1px solid rgba(255,255,255,0.08);
+    }
+    .greeting { font-weight: 600; color: #E23744; font-size: 14px; }
+    .logout-btn { 
+        background: white; color: black !important; padding: 6px 18px !important; 
+        border-radius: 20px !important; font-size: 13px; transition: 0.3s; 
+    }
+    .logout-btn:hover { background: #e6e6e6; transform: scale(1.05); }
+
+    /* --- Hamburger Icon (Hidden on Desktop) --- */
+    .menu-icon {
+        display: none;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    /* =========================================================
+       MOBILE RESPONSIVE OVERRIDES (WITH DROPDOWN MENU)
+       ========================================================= */
+    @media (max-width: 768px) {
+        nav { padding: 12px 20px !important; }
+        
+        .logo img { 
+            transform: scale(1.3) !important; /* Safe mobile size */
+            margin-left: 0 !important; 
+            height: 35px !important; 
+        }
+
+        /* Show the Hamburger Menu Icon */
+        .menu-icon { display: block !important; margin-left: auto; }
+
+        /* Turn nav-links into a hidden dropdown menu */
+        .nav-links { 
+            display: none !important; /* Hidden by default on mobile */
+            position: absolute;
+            top: 100%; /* Sits exactly below the navbar */
+            left: 0;
+            width: 100%;
+            background: rgba(15, 15, 20, 0.95); /* Solid dark glass */
+            backdrop-filter: blur(24px);
+            flex-direction: column;
+            padding: 20px 0;
+            gap: 15px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.7);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* This class is added by Javascript when the button is clicked */
+        .nav-links.show-mobile-menu {
+            display: flex !important;
+        }
+        
+        /* Center the links inside the dropdown */
+        .nav-links a { 
+            display: block !important; 
+            text-align: center;
+            width: 100%;
+            padding: 12px 0 !important;
+            font-size: 16px !important;
+        }
+        
+        /* Center the login/profile buttons in the dropdown */
+        .login-trigger, .user-profile { 
+            margin: 10px auto !important; 
+            justify-content: center;
+        }
+    }
+</style>
+
+<nav>
+    <a href="index.html" class="logo">
+        <img src="images/logo.png" alt="Vishakkunnu Logo" />
+    </a>
+    
+    <div class="menu-icon" onclick="toggleMobileMenu()">☰</div>
+    
+    <div class="nav-links" id="navLinksContainer">
+        <a href="index.html">Home</a>
+        <a href="order.html">Book Now</a>
+
+        <a href="your_booking.html" data-auth="in" style="display:none !important">Your Bookings</a>
+
+        <a href="index.html#about">About Us</a>
+        <a href="index.html#contact">Contact</a>
+
+        <div class="user-profile" data-auth="in" style="display:none !important">
+                <span class="greeting">Hi, <span class="vk-user-name"></span>!</span>
+                <a href="index.html" class="logout-btn" data-vk="logout">Logout</a>
+            </div>
+            <button class="login-trigger" data-auth="out" onclick="openAuth()">Log in</button>
+    </div>
+</nav>
+
+<script>
+    // 1. Mobile Menu Toggle Logic
+    function toggleMobileMenu() {
+        const navMenu = document.getElementById("navLinksContainer");
+        navMenu.classList.toggle("show-mobile-menu");
+    }
+
+    // 2. Smarter Active Link Logic
+    document.addEventListener("DOMContentLoaded", function() {
+        let currentPath = window.location.pathname.split('/').pop() || 'index.html';
+        let currentHash = window.location.hash; 
+        let navLinks = document.querySelectorAll("#navLinksContainer a");
+        
+        navLinks.forEach(link => {
+            let linkHref = link.getAttribute("href");
+            link.classList.remove("active");
+
+            // Don't apply 'active' to the logout button
+            if(link.classList.contains('logout-btn')) return;
+
+            if (currentHash) {
+                if (linkHref.includes(currentHash)) {
+                    link.classList.add("active");
+                }
+            } else if (linkHref === currentPath) {
+                link.classList.add("active");
+            }
+        });
+    });
+</script>
+<style>
+    @import url('https://fonts.googleapis.com/css?family=Amatic+SC:700');
+
+    /* --- Tech Cafe Dark Background (FLEXBOX ADDED FOR CENTERING) --- */
+    #global-loader {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background-color: #0f0f13; /* EXACT match to your page background */
+        z-index: 99999;
+        overflow: hidden;
+        transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
+        
+        /* Flexbox guarantees perfect centering on all screen sizes */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5vh; /* Responsive space between text and pan */
+    }
+
+    #global-loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    /* --- Themed Typography --- */
+    #global-loader h1 {
+        margin: 0;
+        text-align: center;
+        font-family: 'Amatic SC', cursive;
+        /* clamp() makes the font scale smoothly between mobile and desktop */
+        font-size: clamp(32px, 6vw, 6vh); 
+        color: #ffffff; 
+        font-weight: 700;
+        letter-spacing: 2px;
+        opacity: .85;
+        animation: pulse 2.5s linear infinite;
+        text-shadow: 0 0 15px rgba(226, 55, 68, 0.4); 
+    }
+
+    /* --- The Cooking Pan --- */
+    #cooking {
+        position: relative;
+        /* Changed from vh to vmin! This makes it responsive on portrait screens */
+        width: 65vmin; 
+        height: 65vmin;
+        max-width: 500px; /* Caps the size on massive desktop screens */
+        max-height: 500px;
+        overflow: hidden;
+    }
+
+    #cooking .bubble {
+        position: absolute;
+        border-radius: 100%;
+        box-shadow: 0 0 .25vh rgba(255, 107, 119, 0.8);
+        opacity: 0;
+    }
+
+    /* Recalculated Bubble Colors & Sizes (vh -> vmin) */
+    #cooking .bubble:nth-child(1) {
+        margin-top: 2.5vmin; left: 58%; width: 2.5vmin; height: 2.5vmin;
+        background-color: #ff6b77; 
+        animation: bubble 2s cubic-bezier(.53, .16, .39, .96) infinite;
+    }
+    #cooking .bubble:nth-child(2) {
+        margin-top: 3vmin; left: 52%; width: 2vmin; height: 2vmin;
+        background-color: #ff4f5e; 
+        animation: bubble 2s ease-in-out .35s infinite;
+    }
+    #cooking .bubble:nth-child(3) {
+        margin-top: 1.8vmin; left: 50%; width: 1.5vmin; height: 1.5vmin;
+        background-color: #E23744; 
+        animation: bubble 1.5s cubic-bezier(.53, .16, .39, .96) .55s infinite;
+    }
+    #cooking .bubble:nth-child(4) {
+        margin-top: 2.7vmin; left: 56%; width: 1.2vmin; height: 1.2vmin;
+        background-color: #c42835; 
+        animation: bubble 1.8s cubic-bezier(.53, .16, .39, .96) .9s infinite;
+    }
+    #cooking .bubble:nth-child(5) {
+        margin-top: 2.7vmin; left: 63%; width: 1.1vmin; height: 1.1vmin;
+        background-color: #a61e28; 
+        animation: bubble 1.6s ease-in-out 1s infinite;
+    }
+
+    #cooking #area {
+        position: absolute; bottom: 0; right: 0; width: 50%; height: 50%;
+        background-color: transparent;
+        transform-origin: 15% 60%;
+        animation: flip 2.1s ease-in-out infinite;
+    }
+
+    #cooking #area #sides {
+        position: absolute; width: 100%; height: 100%;
+        transform-origin: 15% 60%;
+        animation: switchSide 2.1s ease-in-out infinite;
+    }
+
+    #cooking #area #sides #handle {
+        position: absolute; bottom: 18%; right: 80%; width: 35%; height: 20%;
+        background-color: transparent;
+        border-top: 1vmin solid #E23744; /* Changed to vmin */
+        border-left: 1vmin solid transparent; /* Changed to vmin */
+        border-radius: 100%;
+        transform: rotate(20deg) rotateX(0deg) scale(1.3, .9);
+    }
+
+    #cooking #area #sides #pan {
+        position: absolute; bottom: 20%; right: 30%; width: 50%; height: 8%;
+        background-color: #E23744; 
+        border-radius: 0 0 1.4em 1.4em;
+        transform-origin: -15% 0;
+    }
+
+    #cooking #area #pancake {
+        position: absolute; top: 24%; width: 100%; height: 100%;
+        transform: rotateX(85deg);
+        animation: jump 2.1s ease-in-out infinite;
+    }
+
+    #cooking #area #pancake #pastry {
+        position: absolute; bottom: 26%; right: 37%; width: 40%; height: 45%;
+        background-color: #ffffff; 
+        box-shadow: 0 0 5px 0 rgba(255,255,255,0.5);
+        border-radius: 100%;
+        transform-origin: -20% 0;
+        animation: fly 2.1s ease-in-out infinite;
+    }
+
+    /* --- Keyframes --- */
+    @keyframes jump {
+        0% { top: 24%; transform: rotateX(85deg); }
+        25% { top: 10%; transform: rotateX(0deg); }
+        50% { top: 30%; transform: rotateX(85deg); }
+        75% { transform: rotateX(0deg); }
+        100% { transform: rotateX(85deg); }
+    }
+
+    @keyframes flip {
+        0% { transform: rotate(0deg); }
+        5% { transform: rotate(-27deg); }
+        30%, 50% { transform: rotate(0deg); }
+        55% { transform: rotate(27deg); }
+        83.3% { transform: rotate(0deg); }
+        100% { transform: rotate(0deg); }
+    }
+
+    @keyframes switchSide {
+        0% { transform: rotateY(0deg); }
+        50% { transform: rotateY(180deg); }
+        100% { transform: rotateY(0deg); }
+    }
+
+    @keyframes fly {
+        0% { bottom: 26%; transform: rotate(0deg); }
+        10% { bottom: 40%; }
+        50% { bottom: 26%; transform: rotate(-190deg); }
+        80% { bottom: 40%; }
+        100% { bottom: 26%; transform: rotate(0deg); }
+    }
+
+    @keyframes bubble {
+        0% { transform: scale(.15, .15); top: 80%; opacity: 0; }
+        50% { transform: scale(1.1, 1.1); opacity: 1; }
+        100% { transform: scale(.33, .33); top: 60%; opacity: 0; }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1, 1); opacity: .4; }
+        50% { transform: scale(1.05, 1); opacity: 1; }
+        100% { transform: scale(1, 1); opacity: .4; }
+    }
+</style>
+
+<div id="global-loader">
+    <h1>Cooking in progress..</h1>
+    <div id="cooking">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        
+        <div id="area">
+            <div id="sides">
+                <div id="pan"></div>
+                <div id="handle"></div>
+            </div>
+            <div id="pancake">
+                <div id="pastry"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. SILKY FADE OUT ON LOAD
+    window.addEventListener('load', function() {
+        const loader = document.getElementById('global-loader');
+        setTimeout(() => {
+            loader.classList.add('hidden');
+        }, 150); 
+    });
+
+    // 2. BACK BUTTON FIX
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            document.getElementById('global-loader').classList.add('hidden');
+        }
+    });
+
+    // 3. SMART FADE IN ON CLICK
+    document.addEventListener("DOMContentLoaded", function() {
+        const links = document.querySelectorAll('a');
+        
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const hrefAttr = this.getAttribute('href');
+                const targetAttr = this.getAttribute('target');
+                
+                if (!hrefAttr || hrefAttr.startsWith('javascript') || targetAttr === '_blank') {
+                    return;
+                }
+
+                const linkUrl = new URL(this.href, window.location.href);
+                const currentUrl = new URL(window.location.href);
+
+                if (linkUrl.pathname === currentUrl.pathname && linkUrl.hash) {
+                    return;
+                }
+
+                e.preventDefault(); 
+                document.getElementById('global-loader').classList.remove('hidden'); 
+                
+                setTimeout(() => {
+                    window.location.href = this.href;
+                }, 400); 
+            });
+        });
+    });
+</script>
+
+<div class="bookings-container">
+    <h1>Your Order History</h1>
+
+    <div class="message-box" id="loggedOutBox" style="display:none;">
+        <p>You need to be logged in to view your orders.</p>
+        <br>
+        <a href="index.html" style="background: #E23744; color: white; padding: 10px 20px; border-radius: 8px; font-weight: bold; text-decoration: none;">Log In</a>
+    </div>
+
+    <div class="orders-list" id="ordersList"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var list = document.getElementById('ordersList');
+        var box = document.getElementById('loggedOutBox');
+
+        function cardHtml(o) {
+            var status = o.status || 'Unknown';
+            var statusClass = status.toLowerCase() === 'confirmed' ? 'confirmed' : (status.toLowerCase() === 'cancelled' ? 'cancelled' : 'pending');
+            var isTakeaway = !o.bookingDate || o.bookingDate === '2099-01-01';
+            var context = isTakeaway ? 'Takeaway Order' : (o.bookingDate + ' \u2022 ' + (o.bookingTime || ''));
+            var table = (!o.tableId || o.tableId === 'None') ? '' : 'Table ' + o.tableId;
+            var bill = o.totalBill || '0.00';
+            var id = String(o.id); while (id.length < 4) id = '0' + id;
+
+            var items = [];
+            try { items = JSON.parse(o.cartData || '[]'); } catch (e) { items = null; }
+            var itemsHtml;
+            if (items === null) itemsHtml = '<span style="color:#888;">Items unavailable</span>';
+            else if (!items.length) itemsHtml = '<span style="color:#888; font-style:italic;">Table Reservation Only</span>';
+            else itemsHtml = items.map(function (it) {
+                return '<div class="item-row"><span class="item-dot">\u25A0</span><div><span class="item-qty">' +
+                    VK.esc(it.quantity) + ' x</span> ' + VK.esc(it.name) + '</div></div>';
+            }).join('');
+
+            return '<div class="order-card">' +
+                '<div class="order-header"><div>' +
+                    '<span class="order-id">#ORD-' + id + '</span>' +
+                    '<div class="order-context">' + (table ? '<span class="table-badge">' + VK.esc(table) + '</span>' : '') +
+                    '<span>' + VK.esc(context) + '</span></div>' +
+                '</div><div class="status ' + statusClass + '">' + VK.esc(status) + '</div></div>' +
+                '<div class="order-body"><div class="order-items">' + itemsHtml + '</div></div>' +
+                '<div class="order-footer"><div><div class="total-label">Total Paid</div>' +
+                '<div class="total-amount">$' + VK.esc(bill) + '</div></div>' +
+                '<button class="reorder-btn" onclick="window.location.href=\'order.html\'">Reorder</button></div>' +
+                '</div>';
+        }
+
+        function render() {
+            var user = VK.Auth.user();
+            if (!user) { box.style.display = ''; list.innerHTML = ''; return; }
+            box.style.display = 'none';
+            var orders = VK.Orders.forUser(user);
+            if (!orders.length) {
+                list.innerHTML = "<div class='message-box'>Looks like you haven't ordered anything yet.<br><br>" +
+                    "<a href='order.html' style='color:#E23744; text-decoration:none; font-weight:600;'>Browse Menu \u2794</a></div>";
+                return;
+            }
+            list.innerHTML = orders.map(cardHtml).join('');
+        }
+
+        window.addEventListener('vk-auth-change', render);
+        render();
+    });
+</script>
+<style>
+    /* --- Liquid Glass Footer Styles --- */
+    .glass-footer {
+        /* Liquid Glass Base */
+        background: rgba(15, 15, 20, 0.3); 
+        backdrop-filter: blur(24px) saturate(180%); 
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        
+        padding: 60px 50px 20px 50px;
+        font-family: 'Inter', sans-serif;
+        color: #a0a0a0;
+        margin-top: auto; 
+    }
+
+    .footer-container {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Brand Section (DESKTOP STYLES) */
+    .footer-logo {
+        height: 70px; 
+        width: auto;
+        margin-bottom: 40px; /* Replaced the <br><br> with clean CSS margin */
+        display: block;
+        margin-left: -170px;
+        transform: scale(3.0); 
+        transform-origin: left center; 
+    }
+    
+    .footer-brand p {
+        font-size: 14px;
+        line-height: 1.6;
+        max-width: 320px;
+        margin: 0;
+        margin-left: -120px;
+    }
+
+    /* Link Columns */
+    .footer-section h3 {
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+        letter-spacing: 0.5px;
+    }
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .footer-links li {
+        margin-bottom: 12px;
+    }
+    .footer-links a {
+        color: #a0a0a0;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+    
+    /* The Red Slide Hover Effect */
+    .footer-links a:hover {
+        color: #E23744;
+        transform: translateX(5px); 
+    }
+
+    /* Bottom Copyright Bar */
+    .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 40px auto 0 auto;
+        padding-top: 20px;
+        font-size: 13px;
+    }
+    .creators {
+        color: white;
+    }
+    .creators span {
+        color: #E23744;
+        font-weight: 700;
+    }
+
+    /* =========================================================
+       MOBILE RESPONSIVE OVERRIDES 
+       This section activates only on screens smaller than 768px
+       ========================================================= */
+    @media (max-width: 768px) {
+        .glass-footer { 
+            padding: 40px 20px 20px 20px; 
+        }
+        
+        .footer-container { 
+            flex-direction: column; 
+            gap: 40px; 
+            text-align: center; /* Center everything! */
+        }
+        
+        .footer-logo { 
+            transform: scale(1.8); /* Scale it down for mobile */
+            transform-origin: center; /* Scale from the middle, not the left */
+            margin: 20px auto 30px auto; /* RESET the -170px margin and center it */
+        }
+        
+        .footer-brand p { 
+            text-align: center; 
+            margin: 0 auto; /* RESET the -120px margin and center it */
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centers the quick links perfectly */
+        }
+
+        .footer-bottom { 
+            flex-direction: column; 
+            gap: 15px; 
+            text-align: center; 
+        }
+    }
+</style>
+
+<footer class="glass-footer">
+    <div class="footer-container">
+        <div class="footer-brand">
+            <img src="images/logo.png" alt="Vishakkunnu Logo" class="footer-logo">
+            <br>
+            <p>Revolutionizing the way you order food. Skip the line, book your table, and satisfy your cravings with seamless technology.</p>
+        </div>
+
+        <div class="footer-section">
+            <h3>Quick Links</h3>
+            <ul class="footer-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="order.html">Menu & Order</a></li>
+                <li><a href="index.html#about">About the Devs</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h3>Support</h3>
+            <ul class="footer-links">
+                <li><a href="index.html#contact">Contact Us</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div>&copy; 2026 Vishakkunnu. All rights reserved.</div>
+        <div style="color:#6b6b6b;">Front-end demo &middot; your data is stored only in this browser</div>
+        
+    </div>
+</footer>
+</body>
+</html>
