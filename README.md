@@ -1,5 +1,6 @@
 # Vishakkunnu - Food Order App (static front end)
 
+https://jowinlalu100-wq.github.io/Vishakkunnu/
 Front-end-only version of the Java/JSP project, ready for **GitHub Pages**.
 The servlets and MySQL database are replaced by a small browser-side demo layer
 (`assets/demo.js`), so every page and flow works without a server.
